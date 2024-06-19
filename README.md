@@ -8,6 +8,7 @@
 A voice controlled life automation hub, most commonly powered by the Raspberry Pi.
 </p>
 
+Trigger a new CI/CD check.
 
 ## Installation
 Quick installation for the Raspberry Pi 2+
