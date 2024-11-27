@@ -1,0 +1,45 @@
+{ "schema": {
+    "mqtt": {
+        "type":"object",
+        "title":"{{title}}",
+        "properties": {
+            "server_address":{
+                "type": "string",
+                "title": "{{server_address}}",
+                "required": true
+            },
+            "server_port": {
+                "type": "number",
+                "title": "{{server_port}}",
+                "required": true,
+                "default":8123
+            },            
+            "username": {
+                "type": "string",
+                "title": "{{server_user}}",
+                "required": false
+            },
+            "userpassword": {
+                "type": "password",
+                "title": "{{server_password}}",
+                "required": false
+            }
+        }
+    }
+},
+    "form": [
+        {
+            "title": "{{title}}",
+            "type": "fieldset",        
+            "expandable": true,
+            "order": -24,
+            "items": [
+                {
+                    "type": "section",
+                    "key": "mqtt",
+                    "expandable": false
+                }
+            ]            
+        }
+    ]
+}

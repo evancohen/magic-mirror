@@ -1,16 +1,33 @@
-const { ipcRenderer, remote } = require("electron");
+const { ipcRenderer } = require("electron");
+//const remote = require("@electron/remote")
 //const remote  = require("electron").remote;
 
 (function () {
 	"use strict";
+		try {
+			//console.log("args="+JSON.stringify(window.process.argv,null,2))
+		}
+		catch(ex){
 
+		}
+		finally {
+			//config.communications_port = 5200
+			for(let p of window.process.argv){
+				if(p.startsWith("sonusPort")){
+					config.communications_port=p.split(":")[1]
+					break;
+				}
+			}
+		}
+		//console.log("SpeechService sonusPort="+config.communications_port)
 	function SpeechService($rootScope, $translate) {
 		var service = {};
 		var callbacks = {};
 		var commandList = [];
 		var commandPage = [];
 
-		config.communications_port = remote.getGlobal("sonusSocket");
+		config.communications_port = 5200 || remote.getGlobal("sonusSocket");
+
 		service.init = function (cb) {
 			// workaround so we can trigger requests at any time
 			annyang.isListening = () => {
@@ -139,7 +156,7 @@ const { ipcRenderer, remote } = require("electron");
 					//
 					// the recorder library  asks sm sonus to disconnect from mic, then start up our own version without
 					// hotword (assistant) and maybe reco all together (alexa)
-					// after each recording we have no idea is more prompts are coming
+					// after each recording we have no idea if more prompts are coming
 					// so the library has to disconnect and tell sm sonus.js to reconnect
 					// the plugin needing this service needs to call startVoiceRecognition
 					// to start each sequence

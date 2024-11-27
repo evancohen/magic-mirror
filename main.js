@@ -7,6 +7,11 @@ const remote = require("./remote.js");
 const app = electron.app;
 // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow;
+
+//const { BrowserWindow } = require('@electron/remote/main')
+
+// In the main process:
+require('@electron/remote/main').initialize()
 // Prevent the monitor from going to sleep.
 const powerSaveBlocker = electron.powerSaveBlocker;
 powerSaveBlocker.start("prevent-display-sleep");
@@ -17,7 +22,34 @@ const getPort = require("get-port");
 
 // Launching the mirror in dev mode
 const DevelopmentMode = process.argv.includes("dev");
-const usepm2 = process.argv.includes("usepm2");
+let usepm2 = false;
+// Replace with:
+const debug =DevelopmentMode?true:false;
+
+
+//if (debug) console.log("getting pm2 process list");
+exec("pm2 jlist", (error, stdout) => {
+  if (!error) {
+    let output = JSON.parse(stdout);
+    if (debug)
+      console.log(
+        "processing pm2 jlist output, " + output.length + " entries"
+      );
+    output.forEach((managed_process) => {
+      if(debug)
+        console.log("comparing "+__dirname +" with "+ managed_process.pm2_env.pm_cwd )
+      // if we find a pm2 process matching our location
+      // and that process is online, then it is us
+      if (managed_process.pm2_env.pm_cwd.startsWith(__dirname) && managed_process.pm2_env.status ==="online") {
+        if (debug)
+          console.log(
+            "found our pm2 entry, id=" + managed_process.pm_id
+          );
+        usepm2 = true;
+      }
+    });
+  }
+});
 //var atomScreen = null;
 // Load the smart mirror config
 let config;
@@ -47,10 +79,11 @@ try {
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
-
+	app.disableHardwareAcceleration();
 function createWindow() {
 	app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
 	app.commandLine.appendSwitch("disable-http-cache");
+
 	// Get the displays and render the mirror on a secondary screen if it exists
 	var atomScreen = null;
 	if (electron.screen == undefined) {
@@ -67,6 +100,7 @@ function createWindow() {
 			break;
 		}
 	}
+
 	const { width, height } = atomScreen.getPrimaryDisplay().workAreaSize;
 	var browserWindowOptions = {
 		width: width,
@@ -80,14 +114,16 @@ function createWindow() {
 			nodeIntegration: true,
 			enableRemoteModule: true,
 			contextIsolation: false,
+			additionalArguments:["sonusPort:"+global.sonusSocket]
 		},
 	};
 	if (externalDisplay) {
 		browserWindowOptions.x = width; //+ 2; //externalDisplay.bounds.x + 50
 		browserWindowOptions.y = height; //externalDisplay.bounds.y + 50
-		console.log(
-			"display size=" + browserWindowOptions.x + "+" + browserWindowOptions.y
-		);
+		if(debug)
+			console.log(
+				"display size=" + browserWindowOptions.x + "+" + browserWindowOptions.y
+			);
 	}
 
 	// Create the browser window.
@@ -148,6 +184,9 @@ function startSonus(port) {
 if (config && config.speech && !firstRun) {
 	// get the sonus communications socket port
 	getPort({ port: getPort.makeRange(9000, 9500) }).then((port) => {
+		if(debug)
+			console.log("found port="+port)
+		//console.log("global="+JSON.stringify(global,null,2))
 		global.sonusSocket = port;
 		config.communications_port = port;
 		startSonus(config.communications_port);
@@ -216,10 +255,14 @@ if ((config.remote && config.remote.enabled) || firstRun) {
 	remote.on("relaunch", function (newConfig) {
 		console.log("Relaunching...");
 		// rebuild the html file plugin position info, from the NEW config data
+		// if pm2 is not being used for this process control
 		if (!usepm2) {
+			// recalc plugin info since something changed
 			loader.loadPluginInfo(__dirname + "/index.html", newConfig);
+			// force reload
 			app.relaunch();
 		}
+		// else die and pm2 will restart us
 		app.quit();
 	});
 }
@@ -241,17 +284,18 @@ if (config.motion && config.motion.enabled) {
 
 	mtnProcess.stdout.on("data", function (data) {
 		var message = data.toString();
+		//console.log("motion message="+message)
 		if (message.startsWith("!s:")) {
-			console.log(message.substring(3));
+			//console.log(message.substring(3));
 			mainWindow.webContents.send("motionstart", true);
 		} else if (message.startsWith("!e:")) {
-			console.log(message.substring(3));
+			//console.log(message.substring(3));
 			mainWindow.webContents.send("motionend", true);
 		} else if (message.startsWith("!c:")) {
-			console.log(message.substring(3));
+			//console.log(message.substring(3));
 			mainWindow.webContents.send("calibrated", true);
 		} else if (message.startsWith("!E:")) {
-			console.log(message.substring(3));
+			//console.log(message.substring(3));
 			mainWindow.webContents.send("Error", message.substring(3));
 			mtnProcess.kill();
 		} else {

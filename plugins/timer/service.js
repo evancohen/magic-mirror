@@ -10,6 +10,7 @@
 		service.paused = true;
 		service.duration = 0;
 		service.countdown = -1;
+		//service.timerlist={}
 
 		/**
      * Parse spoken duration into seconds
@@ -44,10 +45,13 @@
 			}, 1000);
 		};
 
-		service.start = function (duration) {
-			if (angular.isDefined(duration)) {
-				if (isNaN(duration)) {
-					duration = parseDuration(duration);
+		service.start = function (params) {
+			//if (angular.isDefined(duration)) {
+				// get seconds of timer duration
+			let duration=params.duration
+			if( params.duration != undefined){
+				if ( isNaN(params.duration)) {
+					duration = parseDuration(params.duration);
 				}
 				if (service.running) {
 					service.reset();
@@ -63,6 +67,7 @@
 				}
 				intervalId = startTimer();
 				service.paused = false;
+
 
 				$rootScope.$broadcast("timer:start", service.countdown);
 			}
@@ -152,6 +157,11 @@
 				});
 			}
 		};
+		function signalForTimer(params){
+			console.log("signaling timer="+JSON.stringify(params))
+			$rootScope.$broadcast('TimerService',params)
+		}
+		service.startTimer=service.stopTimer=service.resumeTimer=service.showTimer=signalForTimer
 	};
 
 	angular.module('SmartMirror')

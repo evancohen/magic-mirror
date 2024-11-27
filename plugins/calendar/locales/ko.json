@@ -1,11 +1,12 @@
 {
   "calendar": {
     "config": {
-      "title": "Calendar Settings",
+      "title": "캘린더 설정",
       "URLs": "iCal URL",
-      "maxevents": "모든 iCals의 최대 이벤트 수",
-      "maxdays": "표시 할 최대 일수",
-      "showCalendarNames": "캘린더 이름 표시를 확인하십시오."
+      "maxevents": "모든 iCal의 최대 이벤트 수",
+      "maxdays": "표시할 최대 일수",
+      "showCalendarNames": "캘린더 이름을 표시하려면 확인하십시오.",
+      "refeshInterval": "새로 고침 빈도(분), 기본값 30"
     }
   }
 }

@@ -4,6 +4,7 @@ function Rss($scope, $http, $q, $interval) {
 	$scope.currentIndex = 0;
 	var rss = {};
 	rss.feed = [];
+	$scope.rss = rss
 
 	rss.get = function () {
 		rss.feed = [];

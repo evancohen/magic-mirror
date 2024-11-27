@@ -4,8 +4,8 @@
 	function MirrorCtrl(
 		Focus,
 		SpeechService,
+		MQTTService,
 		AutoSleepService,
-		//		LightService,
 		$rootScope,
 		$scope,
 		$timeout,
@@ -48,6 +48,7 @@
 
 		var resetCommandTimeout;
 		var listeningTimeout;
+		MQTTService.start();
 		SpeechService.init({
 			listening: function (listening) {
 				$scope.listening = listening;
@@ -93,6 +94,7 @@
 				$scope.focus = AutoSleepService.scope;
 				AutoSleepService.startAutoSleepTimer();
 			}
+			$rootScope.$broadcast("clock-tick",$scope.date)
 		}
 		var clearListening = function(){
 			$scope.listening = false;
@@ -183,17 +185,10 @@
 				console.debug("It is", moment().format("h:mm:ss a"));
 			});
 
-			// Control light
-			/*	SpeechService.addCommand("light_action", function (
-				state,
-				target,
-				action
-			) {
-				LightService.performUpdate([state, target, action].join(" "));
-			}); */
 		};
 
 		_this.init();
+
 	}
 
 	angular.module("SmartMirror").controller("MirrorCtrl", MirrorCtrl);

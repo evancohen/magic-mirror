@@ -3,10 +3,10 @@
 #set -e
 
 # Supported versions of node: v4.x, v5.x, v6.x, v7.x, 8.x, 10.x, 14.x
-NODE_MINIMUM_VERSION="v14.0.0"
-NODE_STABLE_VERSION="14.x"
-NPM_TESTED="V6.0.0"
-NODE_TESTED="V14.0.0"
+NODE_MINIMUM_VERSION="v18.0.0"
+NODE_STABLE_VERSION="20.x"
+NPM_TESTED="V10.0.0"
+NODE_TESTED="V18.0.0"
 PM2_FILE=pm2_smart_mirror.json
 
 # Compare node versions.

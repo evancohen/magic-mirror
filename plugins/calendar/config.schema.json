@@ -25,6 +25,17 @@
                     "type": "boolean",
                     "title": "{{showCalendarNames}}",
                     "default": false
+                },
+                "refreshInterval":{
+                    "type":"integer",
+                    "title":"{{refeshInterval}}",
+                    "default":30,
+                    "enum":[
+                        15,
+                        30,
+                        45,
+                        60
+                    ]
                 }
             }
         }
@@ -54,7 +65,8 @@
           },
          "calendar.maxResults",
          "calendar.maxDays",
-         "calendar.showCalendarNames"
+         "calendar.showCalendarNames",
+         "calendar.refreshInterval"
         ]
       }
     ],

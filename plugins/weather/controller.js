@@ -1,4 +1,4 @@
-function Weather($scope, $interval, $http, $translate, GeolocationService) {
+function Weather($scope, $rootScope, $interval, $http, $translate, GeolocationService, WeatherService) {
 	var language =
 		typeof config.general.language !== "undefined"
 			? config.general.language.substr(0, 2)
@@ -7,166 +7,7 @@ function Weather($scope, $interval, $http, $translate, GeolocationService) {
 	var weather = {}
 	weather.get = {}
 
-	weather.getCountry = function () {
-		return new Promise((resolve, reject) => {
-			if (config.forecast.keytype != "Darksky") {
-				// forecast untis will be changed from auto to resolved type,
-				// so this api call is ececuted only once per sm execution
-				// if units is auto, try to discover if this is USA or not
-				if (config.forecast.units === "auto") {
-					// if the geoposition api key is set
-					if(config.geoPosition.key){
-						let url= "https://maps.googleapis.com/maps/api/geocode/json?latlng="+
-									geoposition.coords.latitude.toString().substring(0, 10) +
-									"," +
-									geoposition.coords.longitude.toString().substring(0, 11) +
-									"&key="+config.geoPosition.key
-						$http
-							.get(
-								url
-							)
-							.then((results) => {
-								// point to the first data entry
-								let addresses=results.data.results[0].address_components
-								// get just the country entry
-								let info = addresses.filter((entry) =>{
-										return JSON.stringify(entry.types) === JSON.stringify(['country','political'])
-								})
-								if(info.length){
-									if(info[0].short_name === 'US')
-										config.forecast.units = "us"
-									else config.forecast.units = "si"
-									resolve()
-								} else {
-									console.error("weather unable to determine country from geolocation")
-									reject()
-								}
-							})
-							.catch((error) => {
-								console.error(
-									"weather google geocode country from geolocation failed =" +
-										JSON.stringify(error)
-								)
-								reject()
-							})
-					}
-					else {
-						console.error("geoposition apikey not set, needed by weather");
-						reject()  //
-					}
-				} else resolve()
-			} else {
-				// darksky, nothign to do here
-				resolve()
-			}
-		})
-	}
-	weather.get.Openweather = function () {
-		return new Promise((resolve, reject) => {
-			//$http.get("https://api.openweathermap.org/data/2.5/onecall?lat=30.4548443&lon=-97.6222674&appid=a6bf9feaa86bc2677df1e5f46bd79d55")
-			$http
-				.get(
-					"https://api.openweathermap.org/data/2.5/onecall?lat=" +
-						geoposition.coords.latitude.toString().substring(0, 10) +
-						"&lon=" +
-						geoposition.coords.longitude.toString().substring(0, 11) +
-						"&units=" +
-						(config.forecast.units == "us" ? "imperial" : "metric") +
-						"&appid=" +
-						config.forecast.key
-				)
-				.then(function (response) {
-					//console.log("json="+JSON.stringify(response.data));
-					resolve((weather.forecast = response))
-				})
-				.catch(() => {
-					reject()
-				})
-		})
-	}
-	weather.get.Darksky = function () {
-		return new Promise((resolve, reject) => {
-			$http
-				.jsonp(
-					"https://api.darksky.net/forecast/" +
-						config.forecast.key +
-						"/" +
-						geoposition.coords.latitude +
-						"," +
-						geoposition.coords.longitude +
-						"?units=" +
-						config.forecast.units +
-						"&lang=" +
-						language +
-						"&callback=JSON_CALLBACK"
-				)
-				.then(function (response) {
-					//console.log("json="+JSON.stringify(response.data));
-					resolve((weather.forecast = response))
-				})
-				.catch(() => {
-					reject()
-				})
-		})
-	}
-	weather.get.Climacell = function () {
-		// return a promise, so the caller can wait
-		return new Promise((resolve, reject) => {
-			// list of concurrent requests
-			var plist = []
-			var forecast = null
-			var currently = null
-			// "https://data.climacell.co/v4/timelines?timesteps=1h&units=" + this.config.tempUnits + "&location=" + this.config.lat + "," + this.config.lon + "&fields=temperature,temperatureApparent,precipitationType,humidity,windSpeed,windDirection,weatherCode&apikey=" + this.config.apiKey
-
-			plist.push(	$http.get(
-				/* 'https://api.climacell.co/v3/weather/realtime?lat=' +
-				geoposition.coords.latitude.toString().substring(0,10) + '&lon=' + geoposition.coords.longitude.toString().substring(0,11) + '&unit_system=' +
-				config.forecast.units + '&fields=temp%2Cprecipitation%2Cweather_code%2Ccloud_cover%2Csunrise%2Csunset%2Cvisibility%2Cwind_gust%2Cwind_speed&apikey='+config.forecast.key  */
-				"https://data.climacell.co/v4/timelines?timesteps=1h"+
-					"&units=" + 'metric' + //config.forecast.units +
-					"&location=" + geoposition.coords.latitude.toString().substring(0,10) + "," + geoposition.coords.longitude.toString().substring(0,11) +
-					"&fields=temperature,temperatureApparent,precipitationType,humidity,windSpeed,windDirection,weatherCode"+
-					"&apikey="+config.forecast.key
-			).then(
-				(response)=>{
-					currently=response.data.data;
-				}
-			).catch((error)=>{
-				console.log("climacell realltime failed ="+JSON.stringify(error))
-				reject();
-			})
-			)
-			// get the 10 day forecast info
-			plist.push($http.get(
-				"https://data.climacell.co/v4/timelines?timesteps=1d"+
-				'&location=' + geoposition.coords.latitude.toString().substring(0,10) + ',' + geoposition.coords.longitude.toString().substring(0,11) +
-				"&units=" + 'metric' + //	config.forecast.units +
-				'&fields=temperatureMax,temperatureMin,precipitationType,weatherCode'+
-				'&apikey='+config.forecast.key
-			).then(
-				(response)=>{
-					forecast=response.data.data;
-				}
-			).catch( (error)=>{
-				console.log("climacell forecast failed ="+JSON.stringify(error))
-				reject();
-			})
-			)
-
-			// wait for both above apis to complete
-			Promise.all(plist).then(() => {
-				// save the total data
-				weather["forecast"] = forecast
-				weather.forecast.data = {}
-				weather.forecast.data["currently"] = []
-				// set the currently
-				weather.forecast.data.currently["data"] = currently
-				resolve(weather)
-			})
-		})
-	}
-
-	weather.minutelyForecast = function () {
+	weather.minutelyForecast = function (weather) {
 		if (weather.forecast === null) {
 			return null
 		}
@@ -185,13 +26,14 @@ function Weather($scope, $interval, $http, $translate, GeolocationService) {
 		return r
 	}
 	//Returns the current forecast along with high and low tempratures for the current day
-	weather.currentForecast = function () {
+	weather.currentForecast = function (weather) {
 		if (weather.forecast === null) {
 			return null
 		}
 		let ctemp = 0
 		switch (config.forecast.keytype) {
 			case "Darksky":
+			case "PirateWeather":
 				weather.forecast.data.currently.day = moment
 					.unix(weather.forecast.data.currently.time)
 					.format("ddd")
@@ -248,7 +90,7 @@ function Weather($scope, $interval, $http, $translate, GeolocationService) {
 		return weather.forecast.data.currently
 	}
 
-	weather.weeklyForecast = function () {
+	weather.weeklyForecast = function (weather) {
 		if (weather.forecast === null) {
 			return null
 		}
@@ -256,6 +98,7 @@ function Weather($scope, $interval, $http, $translate, GeolocationService) {
 		var datalength = 0
 		switch (config.forecast.keytype) {
 			case "Darksky":
+			case "PirateWeather":
 				// Add human readable info to info
 				for (i = 0; i < weather.forecast.data.daily.data.length; i++) {
 					weather.forecast.data.daily.data[i].day =
@@ -264,6 +107,7 @@ function Weather($scope, $interval, $http, $translate, GeolocationService) {
 									.unix(weather.forecast.data.daily.data[i].time)
 									.format("ddd")
 							: $translate.instant("forecast.today")
+					weather.forecast.data.daily.data[i].dt=weather.forecast.data.daily.data[i].time
 					weather.forecast.data.daily.data[i].temperatureMin = parseFloat(
 						weather.forecast.data.daily.data[i].temperatureMin
 					).toFixed(0)
@@ -287,6 +131,11 @@ function Weather($scope, $interval, $http, $translate, GeolocationService) {
 				weather.forecast.data.daily.data = []
 				for (i = 0; i < datalength; i++) {
 					weather.forecast.data.daily.data[i] = {}
+					weather.forecast.data.daily.data[i].dt=moment
+									.utc(
+										weather.forecast.timelines[0].intervals[i].startTime,
+										"YYYY-MM-DD"
+									).valueOf()/1000
 					weather.forecast.data.daily.data[i].day =
 						i > 0
 							? moment
@@ -329,6 +178,8 @@ function Weather($scope, $interval, $http, $translate, GeolocationService) {
 				weather.forecast.data.daily.data = []
 				for (i = 0; i < datalength; i++) {
 					weather.forecast.data.daily.data[i] = {}
+					weather.forecast.data.daily.data[i].dt=weather.forecast.data.daily[i].dt
+
 					weather.forecast.data.daily.data[i].day =
 						i > 0
 							? moment.unix(weather.forecast.data.daily[i].dt).format("ddd")
@@ -356,12 +207,13 @@ function Weather($scope, $interval, $http, $translate, GeolocationService) {
 		return weather.forecast.data.daily
 	}
 
-	weather.hourlyForecast = function () {
+	weather.hourlyForecast = function (weather) {
 		if (weather.forecast === null) {
 			return null
 		}
 		switch (config.forecast.keytype) {
 			case "Darksky":
+			case "PirateWeather":
 				weather.forecast.data.hourly.day = moment
 					.unix(weather.forecast.data.hourly.data[0].time)
 					.format("ddd")
@@ -379,32 +231,41 @@ function Weather($scope, $interval, $http, $translate, GeolocationService) {
 	) {
 		geoposition = geopo
 		refreshWeatherData(geoposition)
-		$interval(
-			refreshWeatherData,
+		$interval( ()=>{
+			refreshWeatherData(geoposition)
+			},
 			config.forecast.refreshInterval * 60000 || 7200000
 		)
 	})
 
-	function refreshWeatherData() {
+	function refreshWeatherData(geoposition) {
 		config.forecast.keytype = (config.forecast.keytype + " ").split(" ")[0]
 		config.forecast.key = config.forecast.key.trim()
 		// map location to country for auto weather units (if needed)
-		weather.getCountry().then(() => {
+		WeatherService.getCountry(geoposition).then(() => {
 			// get the weather info
-			weather.get[config.forecast.keytype]().then(
-				() => {
+			WeatherService.get[config.forecast.keytype](geoposition).then(
+				(weather_data) => {
 					// set the current forecast info for index.html usage
-					$scope.currentForecast = weather.currentForecast()
+					$scope.currentForecast = weather.currentForecast(weather_data)
 					// set the weekely forecast info for index.html usage
-					$scope.weeklyForecast = weather.weeklyForecast()
+					$scope.hourlyForecast=null
+					$scope.minutelyForecast=null
+					$scope.weeklyForecast = weather.weeklyForecast(weather_data)
 					if (config.forecast.keytype != "Climacell") {
 						// we don't have hourly
-						$scope.hourlyForecast = weather.hourlyForecast()
+						$scope.hourlyForecast = weather.hourlyForecast(weather_data)
 						if (config.forecast.keytype == "Darksky") {
 							// or minutely anymore
-							$scope.minutelyForecast = weather.minutelyForecast()
+							$scope.minutelyForecast = weather.minutelyForecast(weather_data)
 						}
 					}
+					$rootScope.$broadcast('weather', {
+								current:$scope.currentForecast,
+								weekly:$scope.weeklyForecast,
+								hourly:$scope.hourlyForecast,
+								minutely:$scope.minutelyForecast
+							});
 				},
 				function (err) {
 					console.log(err)
@@ -495,6 +356,7 @@ function Weather($scope, $interval, $http, $translate, GeolocationService) {
 			case "mostly_clear":
 			case 1100:
 			case "clear sky":
+			case "clear day":
 			case "few clouds":
 			case "clear":
 			case 1000:

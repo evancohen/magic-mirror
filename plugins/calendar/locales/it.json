@@ -1,11 +1,12 @@
 {
   "calendar": {
     "config": {
-      "title": "Calendar Settings",
+      "title": "Impostazioni del calendario",
       "URLs": "URL iCal",
-      "maxevents": "Numero massimo di eventi per tutti gli iCals",
+      "maxevents": "Numero massimo di eventi per tutti iCal",
       "maxdays": "Numero massimo di giorni da visualizzare",
-      "showCalendarNames": "Selezionare per visualizzare i nomi dei calendari"
+      "showCalendarNames": "Selezionare per visualizzare i nomi del calendario",
+      "refeshInterval": "Frequenza di aggiornamento in minuti, valore predefinito 30"
     }
   }
 }

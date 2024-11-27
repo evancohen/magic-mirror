@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html ng-app="SmartMirror">
+
+<head ng-controller="Theme">
+  <meta charset="utf-8">
+  <title>Smart Mirror</title>
+  <script>
+    const annyang = require('annyang')
+    const fs = require('fs')
+    let config
+    try{
+      config = require('./config.json')
+    } catch (e){
+      config = require('./remote/.config.default.json')
+    }
+    // Error logging
+    window.onerror = function (errorMsg, url, lineNumber) {
+        fs.appendFileSync('./smart-mirror.log', '['+ new Date().toString() + '] '
+        + errorMsg + '| Script: ' + url + ' Line: ' + lineNumber + '\n');
+    }
+  </script>
+
+
+  <!-- Styles and Resources -->
+  <link rel="shortcut icon" href="favicon.ico" />
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,800,700' rel='stylesheet' type='text/css'>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" ng-href="app/css/{{ layoutName }}.css" />
+  <!-- bower:css -->
+  <!-- endbower -->
+
+</head>
+
+<body ng-controller="MirrorCtrl" ng-cloak> 
+  <div class="fullscreen below">
+  </div>
+  <div class="top">
+    <div class="top-left">
+    </div>
+    <div class="top-right">
+    </div>
+  </div>
+  <div class="container" ng-class="(listening == true)?'listening':'not-listening'">
+    <div class="middle-center">
+    </div>
+    <div class="bottom-center">
+      <div class="error" ng-bind="speechError" ng-show="speechError"></div>
+      <div class="partial-result" ng-bind="partialResult" ng-hide="speechError"></div>
+    </div>
+    <div class="bottom-left">
+    </div>
+    <div class="bottom-right">
+      <!-- Someday something will live here -->
+    </div>
+  </div>
+  <div ng-show="focus == 'sleep'" class="sleep-cover fade"></div>
+  <!-- Smart Mirror JS
+  ==========================================================================
+  The good stuff. -->
+
+  <!-- bower:js -->
+  <script src="bower_components/moment/min/moment-with-locales.js"></script>
+  <script src="bower_components/angular/angular.js"></script>
+  <script src="bower_components/angular-animate/angular-animate.js"></script>
+  <script src="bower_components/angular-dynamic-locale/dist/tmhDynamicLocale.js"></script>
+  <script src="bower_components/angular-translate/angular-translate.js"></script>
+  <script src="bower_components/angular-translate-loader-static-files/angular-translate-loader-static-files.js"></script>
+  <script src="bower_components/rrule/lib/rrule.js"></script>
+  <script src="bower_components/skycons/skycons.js"></script>
+  <!-- endbower -->
+
+  <script src="https://connect.soundcloud.com/sdk/sdk-3.0.0.js"></script>
+
+  <!-- App -->  
+
+  <script src="app/js/app.js"></script>
+  <script src="app/js/focus.js"></script>
+  <script src="app/js/themeController.js"></script>
+ <!-- main page  -->
+</body>
+
+</html>

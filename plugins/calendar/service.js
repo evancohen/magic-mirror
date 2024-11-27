@@ -52,7 +52,7 @@
 			var events = [];
 
 			//Clean string and split the file so we can handle it (line by line)
-			var cal_array = data.replace(new RegExp("\\r", "g"), "").replace(/\n /g, "").split("\n");
+			var cal_array = data.replace(new RegExp("\\r", "g"), "").replace(/\n /g, "").replace(/\\; /g,", ").split("\n");
 
 			//Keep track of when we are activly parsing an event
 			var in_event = false;
@@ -114,13 +114,15 @@
 					//Convert timestamp
 					else if (type == 'DTSTAMP') {
 						//val = makeDate(type, val);
-					} else {
-						val = val
+					}
+
+					if(type == 'SUMMARY' && val !==undefined && val.length>3){
+						cur_event[type] = val
 							.replace(/\\r\\n/g, '<br />')
 							.replace(/\\n/g, '<br />')
 							.replace(/\\,/g, ',');
+							//console.log("calendar cur_event.summary="+cur_event["type"])
 					}
-
 					//Add the value to our event object.
 					if (type !== 'SUMMARY' || (type == 'SUMMARY' && cur_event['SUMMARY'] == undefined)) {
 						cur_event[type] = val;
@@ -195,10 +197,10 @@
 			return service.events;
 		}
 
-		service.getFutureEvents = function () {
+		service.getFutureEvents = function (days,count) {
 			var future_events = [],
 				current_date = new moment(),
-				end_date = new moment().add(config.calendar.maxDays, 'days');
+				end_date = new moment().add(days || config.calendar.maxDays, 'days');
 
 			service.events.forEach(function (itm) {
 				//If the event started before current time but ends after the current time or
@@ -208,7 +210,7 @@
 				}
 			});
 			future_events = sortAscending(future_events);
-			return future_events.slice(0, config.calendar.maxResults);
+			return future_events.slice(0, count || config.calendar.maxResults);
 		}
 
 		var sortAscending = function (events) {

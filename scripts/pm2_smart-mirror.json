@@ -1,8 +1,8 @@
 {
   "apps" : [{
     "name"        : "smart-mirror",
-    "script"      : "/home/pi/smart-mirror.evan/scripts/bash-start.sh",
-    "watch"       : ["/home/pi/smart-mirror.evan/config.json"],
+    "script"      : "/home/sam/temp/sssss/smart-mirror/scripts/bash-start.sh",
+    "watch"       : ["/home/sam/temp/sssss/smart-mirror/config.json"],
     "autorestart" : true
   }]
 }

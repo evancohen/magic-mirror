@@ -1,6 +1,8 @@
 function Stock($scope, $http, $q, $interval) {
-
-	var Stocks= require('alphavantage')({ key: config.stock.key });
+	var Stocks=null
+	if(config.stock && config.stock.key){
+		Stocks= require('alphavantage')({ key: config.stock.key });
+	}
 	// request info on each stock, 1 at a time
 	var getStockQuotes = function () {
 		var promises = [];
@@ -11,17 +13,21 @@ function Stock($scope, $http, $q, $interval) {
 	}
   
 	var getStocks = function () {
-		getStockQuotes().then(function (result) {
-			var stock = [];
-			if (result instanceof Array) {
-				stock = stock.concat(result);
-			} else {
-				stock.push(result);
-			}
-			$scope.stock = stock;
-		}, function (error) {
-			console.log(error);
-		});
+		if(Stocks){
+			getStockQuotes().then(function (result) {
+				var stock = [];
+				if (result instanceof Array) {
+					stock = stock.concat(result);
+				} else {
+					stock.push(result);
+				}
+				$scope.stock = stock;
+			}, function (error) {
+				console.log(error);
+			});
+		} else {
+			console.error("stocks not configured")
+		}
 	}
 
 	getStocks();

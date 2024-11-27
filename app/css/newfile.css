@@ -1,24 +1,31 @@
 :root{
   --scale-factor: 1;  /* set default scaling in case we have partial window, debug or in vm terminal window */
+  --design-width: 1920px;
+  --design-height: 1080px;
 }
 
-@media screen  and (width:1920px) and (orientation: landscape) {
+@media screen and (orientation: landscape) {
     :root{
-        --scale-factor: 1920/1920;
+        --scale-factor: var(width) / var(--design-width);
+     };
+ }
+ @media screen and (orientation: portrait) {
+    :root{
+        --scale-factor: var(width) / var(--design-height);
      };
  }
 
-@media screen and (width:3840px)  and (orientation: landscape) {
+/*@media screen and (width:3840px)  and (orientation: landscape) {
     :root{
-    --scale-factor: 3840/1920;
+    --scale-factor: width/var(--design-width);
 
     };
 }
 @media  screen and (width:1080px)   {
     :root{
-    --scale-factor: 1920/1920;
+    --scale-factor: width/var(--design-width);
     };
-}
+}*/
 
 
 

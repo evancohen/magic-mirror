@@ -16,7 +16,7 @@
 		.config(function (tmhDynamicLocaleProvider) {
 			console.log(config);
 			tmhDynamicLocaleProvider.localeLocationPattern(
-				"bower_components/angular-i18n/angular-locale_" +
+				"node_modules/angular-i18n/angular-locale_" +
 					language +
 					".js"
 			);

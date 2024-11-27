@@ -4,8 +4,10 @@ if [ $mac == 'Darwin' ]; then
   brew tap awsteiner/science
   brew install o2scl
 else
- v=$(apt -qq list libatlas3-base 2>/dev/null)
- if [ "$v". == "." ]; then
-   sudo apt-get install libatlas-base-dev libatlas3-base
+ v=. # $(apt -qq list libatlas3-base 2>/dev/null)
+ d=$(apt -qq list libatlas-base-dev 2>/dev/null)
+ if [ "$v". == "." -o "$d". == "." ]; then
+   #sudo apt-get install libatlas-base-dev libatlas3-base
+   sudo apt-get install libmagic-dev libatlas-base-dev
  fi
 fi

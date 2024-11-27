@@ -1,5 +1,12 @@
+const __rm = require("path");
+let __rmpath = document.currentScript.src.substring(
+	7,
+	document.currentScript.src.lastIndexOf(__sp.sep)
+);
+
 function Reminder($scope, SpeechService, $translate, Focus) {
 	const storage = require("electron-json-storage");
+	storage.setDataPath(__rmpath);
 	// Service variable
 	var remind = {};
 	remind.reminders = [];

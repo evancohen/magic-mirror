@@ -39,6 +39,7 @@ let _spotpath = document.currentScript.src.substring(
 
 		if (
 			typeof config.spotify !== "undefined" &&
+			typeof config.spotify.creds !== "undefined" &&
 			typeof config.spotify.creds.clientSecret !== "undefined" &&
 			config.spotify.creds.clientSecret !== ""
 		) {
@@ -101,40 +102,44 @@ let _spotpath = document.currentScript.src.substring(
 
 		service.init = function (cb) {
 			var port = process.env.PORT || 4100;
-			console.debug("Express is listening on port: " + port);
-			app.listen(port);
+			if(app){
+				console.debug("Express is listening on port: " + port);
+				app.listen(port);
 
-			// Read the persisted token, initially captured by a webapp.
-			fs.stat(tokenFile, function (err) {
-				if (err == null) {
-					persist.read(tokenFile, function (err, token) {
-						if (err) {
-							console.error(
-								"Spotify authentication invalid format, please see the config screen for the authorization instructions.",
-								err
-							);
-						} else {
-							var access_token = token["access_token"];
-							var refresh_token = token["refresh_token"];
+				// Read the persisted token, initially captured by a webapp.
+				fs.stat(tokenFile, function (err) {
+					if (err == null) {
+						persist.read(tokenFile, function (err, token) {
+							if (err) {
+								console.error(
+									"Spotify authentication invalid format, please see the config screen for the authorization instructions.",
+									err
+								);
+							} else {
+								var access_token = token["access_token"];
+								var refresh_token = token["refresh_token"];
 
-							if (!default_device)
-								console.debug("no default spotify device chosen");
+								if (!default_device)
+									console.debug("no default spotify device chosen");
 
-							spotify.setAccessToken(access_token); // Set the client token
-							spotify.setRefreshToken(refresh_token); // Set the client token
-							//                            if (authorized_session) cb();
-							cb();
-						}
-					});
-				} else if (err.code == "ENOENT") {
-					console.error(
-						"Spotify authentication required, please see the config screen for the authorization instructions.",
-						err
-					);
-				} else {
-					console.error(err);
-				}
-			});
+								spotify.setAccessToken(access_token); // Set the client token
+								spotify.setRefreshToken(refresh_token); // Set the client token
+								//                            if (authorized_session) cb();
+								cb();
+							}
+						});
+					} else if (err.code == "ENOENT") {
+						console.error(
+							"Spotify authentication required, please see the config screen for the authorization instructions.",
+							err
+						);
+					} else {
+						console.error(err);
+					}
+				});
+			} else {
+				console.error("Spotify plugin not configured")
+			}
 		};
 
 		service.refreshToken = function () {
@@ -173,9 +178,10 @@ let _spotpath = document.currentScript.src.substring(
 					var id = null;
 					// remove any apostrophes
 					//name = name.replace(/'/g,"")
+					console.log("spotify devices=",data)
 					// Check for name kerword of <named_device> or 'this device'<default_device>
 					name =
-						name.toLowerCase() === "this device" && default_device
+						(name.toLowerCase() === "this device" || name.toLowerCase() === "here") && default_device
 							? default_device
 							: name;
 
@@ -218,6 +224,7 @@ let _spotpath = document.currentScript.src.substring(
 						id = device.id
 					}
 				}) */
+			console.log(" spotify received transfer request to "+name)
 			getDeviceID(name).then((id) => {
 				if (id) {
 					console.log(id);
@@ -232,6 +239,7 @@ let _spotpath = document.currentScript.src.substring(
 						}
 					);
 				} else {
+					console.log("spotify didn't find location id")
 					return null;
 				}
 			});

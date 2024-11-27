@@ -1,0 +1,12 @@
+{
+    "mqtt": {
+        "config": {
+            "title":"MQTT settings",
+            "server_parms": "MQTT Server Parameters",
+            "server_address": "Server address",
+            "server_port": "Server port",
+            "server_user":"Server Username",
+            "server_password":"Server Password"
+        }
+    }
+}
